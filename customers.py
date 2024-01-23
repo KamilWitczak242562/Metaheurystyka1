@@ -7,11 +7,12 @@ class Customer:
         self.ready_time = ready_time
         self.due_date = due_date
         self.service_time = service_time
+        self.visited = False
 
     def __str__(self):
         return f"CUST NO. {self.cust_no}  XCOORD. {self.x_coord}  YCOORD. {self.y_coord}  " \
                f"DEMAND {self.demand}  READY TIME {self.ready_time}  DUE DATE {self.due_date}  " \
-               f"SERVICE TIME {self.service_time}"
+               f"SERVICE TIME {self.service_time} VISITED {self.visited}"
 
 
 def create_customers(data):
