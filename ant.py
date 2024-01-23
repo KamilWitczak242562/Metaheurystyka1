@@ -2,6 +2,7 @@ from script import load_from_csv
 from customers import create_customers, Customer
 import numpy as np
 import random
+from copy import deepcopy
 
 
 def euclidean_distance(point1, point2):
@@ -52,7 +53,7 @@ class Ant:
         total = 0
 
         for place in self.customers:
-            if (not place.visited) and self.capacity > place.demand != 0:
+            if (not place.visited) and place.demand != 0:
                 pheromone = pheromones[self.customers.index(current_place)][self.customers.index(place)]
                 distance = distances[self.customers.index(current_place)][self.customers.index(place)]
 
@@ -65,8 +66,9 @@ class Ant:
             probabilities = [(place, prob / total) for place, prob in probabilities]
             selected_place = np.random.choice([place for place, _ in probabilities],
                                               p=[prob for _, prob in probabilities])
-            self.path.append(selected_place)
-            self.capacity -= selected_place.demand
+            if self.capacity > selected_place.demand:
+                self.path.append(selected_place)
+                self.capacity -= selected_place.demand
             selected_place.visited = True
 
     def chose_next_place_randomly(self, point=0.3):
@@ -126,21 +128,41 @@ def get_best_ant(population_of_ants, previous_best_ant):
 def al(iterations, evaporate, number_of_ants, attractions, alpha, beta, capacity):
     best_ant = None
     for i in range(iterations):
-        for p in attractions:
-            p.visited = False
-        ants = [Ant(attractions, alpha, beta, capacity) for _ in range(number_of_ants)]
+        # for p in attractions:
+        #     p.visited = False
+        ants = [Ant(deepcopy(attractions), alpha, beta, capacity) for _ in range(number_of_ants)]
         # for ant in ants:
         #     ant.starting_point()
         # for j in attractions:
-        while not all([place.visited for place in attractions[1:]]):
-            # if all([place.visited for place in attractions]):
-            #     print("Wszystko")
-            #     return best_ant
-            for ant in ants:
+        # i = 0
+        # while not all([place.visited for place in attractions[1:]]):
+        #     # if all([place.visited for place in attractions]):
+        #     #     print("Wszystko")
+        #     #     return best_ant
+        #     print("Wykonane: ", i)
+        #     print([place.visited for place in attractions[1:]])
+        #     for ant in ants:
+        #         if not ant.chose_next_place_randomly():
+        #             ant.chose_next_place()
+        #     i+=1
+        # evaporate_pheromones(evaporate)
+        # for ant in ants:
+        #     ant.leave_pheromones()
+        # best_ant = get_best_ant(ants, best_ant)
+
+        i = 0
+        for ant in ants:
+            while not all([place.visited for place in ant.customers[1:]]):
+                # print("Wykonane: ", i)
+                # print([place.visited for place in ant.customers[1:]])
                 if not ant.chose_next_place_randomly():
                     ant.chose_next_place()
+                i += 1
+                # if i == 200:
+                #     return best_ant
         evaporate_pheromones(evaporate)
         for ant in ants:
             ant.leave_pheromones()
         best_ant = get_best_ant(ants, best_ant)
+
     return best_ant
