@@ -11,10 +11,10 @@ class Ant:
         self.alpha = alpha
         self.beta = beta
         self.capacity = capacity
-        self.starting_point()
         self.customers = ant_colony.customers
         self.distances = ant_colony.distances
         self.pheromones = ant_colony.pheromones
+        self.starting_point()
 
     def starting_point(self):
         next_move = self.customers[0]
@@ -96,7 +96,7 @@ def get_best_ant(population_of_ants, previous_best_ant):
 def al(iterations, evaporate, number_of_ants, attractions, alpha, beta, capacity):
     best_ant = None
     for i in range(iterations):
-        ants = [Ant(deepcopy(attractions), alpha, beta, capacity) for _ in range(number_of_ants)]
+        ants = [Ant(attractions, alpha, beta, capacity) for _ in range(number_of_ants)]
         i = 0
         for ant in ants:
             while not all([place.visited for place in ant.customers[1:]]):
