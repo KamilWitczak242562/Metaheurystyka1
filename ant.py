@@ -1,8 +1,3 @@
-import copy
-from time import sleep
-
-from script import load_from_csv
-from customers import create_customers, Customer
 import numpy as np
 import random
 from copy import deepcopy
@@ -17,6 +12,7 @@ class Ant:
         self.customers = customers
         self.distances = ant_colony.distances
         self.pheromones = ant_colony.pheromones
+        self.time = 0.00
         self.starting_point()
 
     def starting_point(self):
@@ -43,24 +39,21 @@ class Ant:
             probabilities = [(place, prob / total) for place, prob in probabilities]
             selected_place = np.random.choice([place for place, _ in probabilities],
                                               p=[prob for _, prob in probabilities])
-            if self.capacity > selected_place.demand:
+            if self.capacity > selected_place.demand and selected_place.ready_time >= self.time and self.time + selected_place.service_time <= selected_place.due_time:
                 self.path.append(selected_place)
                 self.capacity -= selected_place.demand
-                if self.capacity <= 0:
-                    print(self.capacity)
+                self.time += selected_place.service_time
             selected_place.visited = True
 
     def chose_next_place_randomly(self, point=0.3):
         if point > random.uniform(0, 1):
-            try:
-                next_move = random.choice([place for place in self.customers[1:] if not place.visited])
-                if self.capacity > next_move.demand:
-                    self.path.append(next_move)
-                    self.customers[self.customers.index(next_move)].visited = True
-                    self.capacity -= next_move.demand
-                else:
-                    self.chose_next_place()
-            except:
+            next_move = random.choice([place for place in self.customers[1:] if not place.visited])
+            if self.capacity > next_move.demand and next_move.ready_time >= self.time and self.time + next_move.service_time <= next_move.due_time:
+                self.path.append(next_move)
+                self.customers[self.customers.index(next_move)].visited = True
+                self.capacity -= next_move.demand
+                self.time += next_move.service_time
+            else:
                 return False
             return True
         return False
@@ -111,6 +104,4 @@ def al(iterations, evaporate, number_of_ants, ant_colony, alpha, beta, capacity)
         for ant in ants:
             ant.leave_pheromones()
         best_ant = get_best_ant(ants, best_ant)
-        # print("Best path in ant (al) ", best_ant.path)
-    print(best_ant.capacity)
     return best_ant
