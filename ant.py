@@ -1,3 +1,6 @@
+import copy
+from time import sleep
+
 from script import load_from_csv
 from customers import create_customers, Customer
 import numpy as np
@@ -6,12 +9,12 @@ from copy import deepcopy
 
 
 class Ant:
-    def __init__(self, ant_colony, alpha, beta, capacity):
+    def __init__(self, ant_colony, customers, alpha, beta, capacity):
         self.path = []
         self.alpha = alpha
         self.beta = beta
         self.capacity = capacity
-        self.customers = ant_colony.customers
+        self.customers = customers
         self.distances = ant_colony.distances
         self.pheromones = ant_colony.pheromones
         self.starting_point()
@@ -43,6 +46,8 @@ class Ant:
             if self.capacity > selected_place.demand:
                 self.path.append(selected_place)
                 self.capacity -= selected_place.demand
+                if self.capacity <= 0:
+                    print(self.capacity)
             selected_place.visited = True
 
     def chose_next_place_randomly(self, point=0.3):
@@ -52,6 +57,7 @@ class Ant:
                 if self.capacity > next_move.demand:
                     self.path.append(next_move)
                     self.customers[self.customers.index(next_move)].visited = True
+                    self.capacity -= next_move.demand
                 else:
                     self.chose_next_place()
             except:
@@ -93,19 +99,18 @@ def get_best_ant(population_of_ants, previous_best_ant):
     return best_ant
 
 
-def al(iterations, evaporate, number_of_ants, attractions, alpha, beta, capacity):
+def al(iterations, evaporate, number_of_ants, ant_colony, alpha, beta, capacity):
     best_ant = None
     for i in range(iterations):
-        ants = [Ant(attractions, alpha, beta, capacity) for _ in range(number_of_ants)]
-        i = 0
+        ants = [Ant(ant_colony, deepcopy(ant_colony.customers), alpha, beta, capacity) for _ in range(number_of_ants)]
         for ant in ants:
             while not all([place.visited for place in ant.customers[1:]]):
                 if not ant.chose_next_place_randomly():
                     ant.chose_next_place()
-                i += 1
-        attractions.evaporate_pheromones(evaporate)
+        ant_colony.evaporate_pheromones(evaporate)
         for ant in ants:
             ant.leave_pheromones()
         best_ant = get_best_ant(ants, best_ant)
-
+        # print("Best path in ant (al) ", best_ant.path)
+    print(best_ant.capacity)
     return best_ant
